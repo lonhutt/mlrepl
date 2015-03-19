@@ -1,0 +1,24 @@
+{
+  "name": "mlrepl",
+  "version": "0.0.1",
+  "description": "a fork of the standard nodejs repl that executes against a marklogic server instead of the built-in node server.",
+  "main": "mlrepl.js",
+  "dependencies": {
+    "marklogic": "^1.0.1",
+    "net": "^1.0.2",
+    "source-map-support": "^0.2.10",
+    "util": "^0.10.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "require('./mlrepl.js').start()"
+  },
+  "keywords": [
+    "repl",
+    "javascript",
+    "marklogic",
+    "cli"
+  ],
+  "author": "Lon Hutt",
+  "license": "MIT"
+}
