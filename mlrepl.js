@@ -11,7 +11,6 @@ var rl = require('readline');
 var Console = require('console').Console;
 var domain = require('domain');
 var debug = util.debuglog('mlrepl');
-var esprima = require('esprima');
 
 var db = marklogic.createDatabaseClient({
   host: 'localhost',
@@ -111,8 +110,12 @@ function MLREPLServer(prompt, stream, eval_, useGlobal, ignoreUndefined) {
 		    			result.push(resp[r].value);
 		    		};
 	    		} else {
-	    			console.log(resp);
-	    			result = resp[0].value;
+            if(resp[0]){
+              result = resp[0].value;  
+            } else {
+              result = resp;
+            }
+	    			
 	    		}
 	      		cb(null, result);
 	      	}).error(function(err){
@@ -127,7 +130,7 @@ function MLREPLServer(prompt, stream, eval_, useGlobal, ignoreUndefined) {
 	          process.domain.exit();
 	          return;
 	        }
-    		cb(err);
+    		// cb(err, re);
     	}
 
       // try {
@@ -147,7 +150,7 @@ function MLREPLServer(prompt, stream, eval_, useGlobal, ignoreUndefined) {
       // }
     }
     
-    // cb(err, result);
+    cb(err, result);
   }
 
   self.eval = self._domain.bind(eval_);
