@@ -1,5 +1,4 @@
-// var repl = require("repl");
-var marklogic = require("marklogic");
+var request = require('request');
 var repl = require('repl');
 var util = require('util');
 var inherits = require('util').inherits;
@@ -12,13 +11,25 @@ var Console = require('console').Console;
 var domain = require('domain');
 var debug = util.debuglog('mlrepl');
 
-var db = marklogic.createDatabaseClient({
+
+var mldbconfig = {
   host: 'localhost',
   port: '8000',
   database: 'inventory-db',
   user: 'admin',
-  password: 'admin'
-});
+  password: 'admin',
+  eval: function(cmd, cb){
+    request.post('http://localhost:9009/repl', 
+      {
+        auth: {user:this.user, pass:this.password, sendImmediately:false},
+        json: {cmd:cmd, mldb:this.database}
+      }, 
+      function(err,resp, body){
+        console.log(body.details);
+        cb(body);
+    });
+  }
+};
 
 // If obj.hasOwnProperty has been overridden, then calling
 // obj.hasOwnProperty(prop) will break.
@@ -88,7 +99,7 @@ function MLREPLServer(prompt, stream, eval_, useGlobal, ignoreUndefined) {
         displayErrors: false
       });
     } catch (e) {
-      console.log('syntax error!!');
+      // console.log('syntax error!!');
       debug('parse error %j', code, e);
       if (isRecoverableError(e))
         err = new Recoverable(e);
@@ -97,41 +108,64 @@ function MLREPLServer(prompt, stream, eval_, useGlobal, ignoreUndefined) {
     }
 
     if (!err && code.trim() != '') {
-    	try{
+    	// try {
     		var cmd = this.lines.join('\n');
-    		// console.log(util.inspect(this));
-	    	cmd += code + '\n';
+
+	    	cmd += '\n'+code;
 	    	var local = this;
-	    	db.eval(cmd).result(function(resp){
-	    		
-	    		if(resp.length > 1){
-	    			result = [];
-		    		for(var r in resp){
-		    			result.push(resp[r].value);
-		    		};
-	    		} else {
-            if(resp[0]){
-              result = resp[0].value;  
-            } else {
-              result = resp;
+
+        self.context.mldbconfig.eval(cmd, function(resp){
+          try{
+            err = resp.error;
+
+            if(err){
+              throw new Recoverable(err);
             }
+
+            result = resp.result;
+          } catch(e){
+            console.log(e);
+            err = e;
+            if (err && process.domain) {
+              debug('not recoverable, send to domain');
+              process.domain.emit('error', err);
+              process.domain.exit();
+              return;
+            }
+          }
+          cb(err, result);
+        });
+
+	    	// self.context.db.eval(cmd).result(function(resp){
+	    		
+	    	// 	if(resp.length > 1){
+	    	// 		result = [];
+		    // 		for(var r in resp){
+		    // 			result.push(resp[r].value);
+		    // 		};
+	    	// 	} else {
+      //       if(resp[0]){
+      //         result = resp[0].value;  
+      //       } else {
+      //         result = resp;
+      //       }
 	    			
-	    		}
-	      		cb(null, result);
-	      	}).error(function(err){
-	      		console.log('parse error: '+err.message); self.displayPrompt();;
-	      		// cb(err);
-	      	});
-    	} catch(e){
-    		err = e;
-	        if (err && process.domain) {
-	          debug('not recoverable, send to domain');
-	          process.domain.emit('error', err);
-	          process.domain.exit();
-	          return;
-	        }
+	    	// 	}
+	     //  		cb(null, result);
+	     //  	}).error(function(err){
+	     //  		console.log('parse error: '+err.message); self.displayPrompt(); return;
+	     //  		// cb(err);
+	     //  	});
+    	// } catch(e){
+    	// 	err = e;
+	    //     if (err && process.domain) {
+	    //       debug('not recoverable, send to domain');
+	    //       process.domain.emit('error', err);
+	    //       process.domain.exit();
+	    //       return;
+	    //     }
     		// cb(err, re);
-    	}
+    	// }
 
       // try {
       //   if (self.useGlobal) {
@@ -150,7 +184,7 @@ function MLREPLServer(prompt, stream, eval_, useGlobal, ignoreUndefined) {
       // }
     }
     
-    cb(err, result);
+    // cb(err, result);
   }
 
   self.eval = self._domain.bind(eval_);
@@ -362,7 +396,8 @@ MLREPLServer.prototype.createContext = function() {
 
   context.module = module;
   context.require = require;
-  context.db = db;
+  // context.db = db;
+  context.mldbconfig = mldbconfig;
 
   this.lines = [];
   this.lines.level = [];
@@ -901,6 +936,31 @@ function defineDefaultCommands(repl) {
       } catch (e) {
         this.outputStream.write('Failed to load:' + file + '\n');
       }
+      this.displayPrompt();
+    }
+  });
+
+  repl.defineCommand('mldb', {
+    help: 'Display / Modify the MarkLogic connection settings.',
+    action: function(dbconfig) {
+      if(dbconfig){
+        dbconfig = JSON.parse(dbconfig);
+        console.log(Object.keys(dbconfig));
+        for(var key of Object.keys(dbconfig)){
+          // console.log(key);
+          // console.log(this.context.mldbconfig[key]);
+          if(this.context.mldbconfig[key]){
+            this.context.mldbconfig[key] = dbconfig[key];
+          }
+        }
+
+        this.context.db = marklogic.createDatabaseClient(this.context.mldbconfig);
+
+      } else {
+        console.log(util.inspect(this.context.db));
+      }
+      
+
       this.displayPrompt();
     }
   });

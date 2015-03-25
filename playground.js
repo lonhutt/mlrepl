@@ -1,3 +1,3 @@
 var mlrepl = require('./mlrepl.js');
 
-mlrepl.start('mlrepl>');
+var replServer = mlrepl.start('mlrepl>');
