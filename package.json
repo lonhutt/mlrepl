@@ -5,7 +5,7 @@
   "main": "mlrepl.js",
   "repository":"https://github.com/lonhutt/mlrepl",
   "dependencies": {
-    "marklogic": "marklogic/node-client-api#develop"
+    "request": "2.54.0"
   },
   "devDependencies": {},
   "scripts": {

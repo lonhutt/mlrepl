@@ -13,19 +13,17 @@ var debug = util.debuglog('mlrepl');
 
 
 var mldbconfig = {
-  host: 'localhost',
-  port: '8000',
-  database: 'inventory-db',
+  database: 'Documents',
   user: 'admin',
   password: 'admin',
   eval: function(cmd, cb){
-    request.post('http://localhost:9009/repl', 
+    request.post('http://localhost:9010/repl', 
       {
         auth: {user:this.user, pass:this.password, sendImmediately:false},
         json: {cmd:cmd, mldb:this.database}
       }, 
       function(err,resp, body){
-        console.log(body.details);
+        // console.log(body);
         cb(body);
     });
   }
@@ -92,6 +90,7 @@ function MLREPLServer(prompt, stream, eval_, useGlobal, ignoreUndefined) {
 
   function defaultEval(code, context, file, cb) {
     var err, result;
+
     // first, create the Script object to check the syntax
     try {
       var script = vm.createScript(code, {
@@ -107,8 +106,10 @@ function MLREPLServer(prompt, stream, eval_, useGlobal, ignoreUndefined) {
         err = e;
     }
 
+
     if (!err && code.trim() != '') {
     	// try {
+
     		var cmd = this.lines.join('\n');
 
 	    	cmd += '\n'+code;
@@ -116,10 +117,9 @@ function MLREPLServer(prompt, stream, eval_, useGlobal, ignoreUndefined) {
 
         self.context.mldbconfig.eval(cmd, function(resp){
           try{
-            err = resp.error;
 
-            if(err){
-              throw new Recoverable(err);
+            if(resp.error){
+              throw new Recoverable(resp.error);
             }
 
             result = resp.result;
@@ -134,57 +134,11 @@ function MLREPLServer(prompt, stream, eval_, useGlobal, ignoreUndefined) {
             }
           }
           cb(err, result);
-        });
-
-	    	// self.context.db.eval(cmd).result(function(resp){
-	    		
-	    	// 	if(resp.length > 1){
-	    	// 		result = [];
-		    // 		for(var r in resp){
-		    // 			result.push(resp[r].value);
-		    // 		};
-	    	// 	} else {
-      //       if(resp[0]){
-      //         result = resp[0].value;  
-      //       } else {
-      //         result = resp;
-      //       }
-	    			
-	    	// 	}
-	     //  		cb(null, result);
-	     //  	}).error(function(err){
-	     //  		console.log('parse error: '+err.message); self.displayPrompt(); return;
-	     //  		// cb(err);
-	     //  	});
-    	// } catch(e){
-    	// 	err = e;
-	    //     if (err && process.domain) {
-	    //       debug('not recoverable, send to domain');
-	    //       process.domain.emit('error', err);
-	    //       process.domain.exit();
-	    //       return;
-	    //     }
-    		// cb(err, re);
-    	// }
-
-      // try {
-      //   if (self.useGlobal) {
-      //     result = script.runInThisContext({ displayErrors: false });
-      //   } else {
-      //     result = script.runInContext(context, { displayErrors: false });
-      //   }
-      // } catch (e) {
-      //   err = e;
-      //   if (err && process.domain) {
-      //     debug('not recoverable, send to domain');
-      //     process.domain.emit('error', err);
-      //     process.domain.exit();
-      //     return;
-      //   }
-      // }
+        });  	
+    } else{
+      cb(err, result);
     }
     
-    // cb(err, result);
   }
 
   self.eval = self._domain.bind(eval_);
@@ -844,7 +798,7 @@ function addStandardGlobals(completionGroups, filter) {
     'Object', 'Function', 'Array', 'String', 'Boolean', 'Number',
     'Date', 'RegExp', 'Error', 'EvalError', 'RangeError',
     'ReferenceError', 'SyntaxError', 'TypeError', 'URIError',
-    'Math', 'JSON']);
+    'Math', 'JSON','cts','fn','math','rdf','sc','sem','spell','temporal','xdmp']);
   // Common keywords. Exclude for completion on the empty string, b/c
   // they just get in the way.
   if (filter) {
