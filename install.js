@@ -1,10 +1,12 @@
 var request = require('request');
 var fs = require('fs');
 
+var mlauth = mlauth;
+
 fs.readFile("./repl.sjs", function(err, data){
   request.put('http://localhost:8000/LATEST/documents?database=Modules&uri=/repl.sjs', 
     {
-      auth: {user:'admin', pass:'admin', sendImmediately:false},
+      auth: mlauth,
       body: data
     }, 
     function(err,resp, body){
@@ -15,7 +17,7 @@ fs.readFile("./repl.sjs", function(err, data){
 fs.readFile("./url_rewritter.sjs", function(err, data){
   request.put('http://localhost:8000/LATEST/documents?database=Modules&uri=/url_rewritter.sjs', 
     {
-      auth: {user:'admin', pass:'admin', sendImmediately:false},
+      auth: mlauth,
       body: data
     }, 
     function(err,resp, body){
@@ -26,7 +28,7 @@ fs.readFile("./url_rewritter.sjs", function(err, data){
 fs.readFile("./requests.xqy", function(err, data){
   request.put('http://localhost:8000/LATEST/documents?database=Modules&uri=/requests.xqy', 
     {
-      auth: {user:'admin', pass:'admin', sendImmediately:false},
+      auth: mlauth,
       body: data
     }, 
     function(err,resp, body){
@@ -37,7 +39,7 @@ fs.readFile("./requests.xqy", function(err, data){
 
 request.post('http://localhost:8002/manage/v2/servers?group-id=Default&server-type=http', 
   {
-    auth: {user:'admin', pass:'admin', sendImmediately:false},
+    auth: mlauth,
     json: {
       "server-name":"repl-http", 
       "root":"/", 
@@ -54,7 +56,7 @@ request.post('http://localhost:8002/manage/v2/servers?group-id=Default&server-ty
 console.log('Testing setup...')
 request.post('http://localhost:9010/repl',
   {
-      auth: {user:'admin', pass:'admin', sendImmediately:false},
+      auth: mlauth,
       json: {cmd:'xdmp.databases();', mldb:'Documents'}
     },
   function(err, repl, body){
