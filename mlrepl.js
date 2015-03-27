@@ -1,3 +1,4 @@
+// var marklogic = require('marklogic');
 var request = require('request');
 var repl = require('repl');
 var util = require('util');
@@ -10,20 +11,38 @@ var rl = require('readline');
 var Console = require('console').Console;
 var domain = require('domain');
 var debug = util.debuglog('mlrepl');
+var ValueIterator = require('./ValueIterator.js');
+
+// var db = marklogic.createDatabaseClient({
+//   user:'admin',
+//   password:'admin',
+//   mleval: function(cmd, cb){
+//     this.eval(cmd).result(function(resp){
+//       cb(resp)
+//     }).error(function(err){
+
+//     });
+//   } 
+// });
 
 
 var mldbconfig = {
   database: 'Documents',
   user: 'admin',
   password: 'admin',
+  completionGroups: ['cts','fn','math','rdf','sc','sem','spell','temporal','xdmp'],
   eval: function(cmd, cb){
+    var scope = this;
     request.post('http://localhost:9010/repl', 
       {
         auth: {user:this.user, pass:this.password, sendImmediately:false},
         json: {cmd:cmd, mldb:this.database}
       }, 
       function(err,resp, body){
-        // console.log(body);
+        if(body.datatype === 'function ValueIterator()' && body.result.constructor === 'Object'){
+          body.result = new ValueIterator(body.result);
+        }
+
         cb(body);
     });
   }
