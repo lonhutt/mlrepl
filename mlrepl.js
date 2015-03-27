@@ -39,6 +39,7 @@ var mldbconfig = {
         json: {cmd:cmd, mldb:this.database}
       }, 
       function(err,resp, body){
+        // console.log(body.datatype);
         if(body.datatype === 'function ValueIterator()' && body.result.constructor === 'Object'){
           body.result = new ValueIterator(body.result);
         }
