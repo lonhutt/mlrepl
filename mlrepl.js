@@ -11,20 +11,6 @@ var rl = require('readline');
 var Console = require('console').Console;
 var domain = require('domain');
 var debug = util.debuglog('mlrepl');
-var ValueIterator = require('./ValueIterator.js');
-
-// var db = marklogic.createDatabaseClient({
-//   user:'admin',
-//   password:'admin',
-//   mleval: function(cmd, cb){
-//     this.eval(cmd).result(function(resp){
-//       cb(resp)
-//     }).error(function(err){
-
-//     });
-//   } 
-// });
-
 
 var mldbconfig = {
   database: 'Documents',
@@ -33,20 +19,57 @@ var mldbconfig = {
   completionGroups: ['cts','fn','math','rdf','sc','sem','spell','temporal','xdmp'],
   eval: function(cmd, cb){
     var scope = this;
-    request.post('http://localhost:9010/repl', 
-      {
-        auth: {user:this.user, pass:this.password, sendImmediately:false},
-        json: {cmd:cmd, mldb:this.database}
-      }, 
-      function(err,resp, body){
-        // console.log(body.datatype);
-        if(body.datatype === 'function ValueIterator()' && body.result.constructor === 'Object'){
-          body.result = new ValueIterator(body.result);
-        }
 
-        cb(body);
+    if(cmd === 'mldb'){
+
+    } else {
+      request.post('http://localhost:9010/repl', 
+        {
+          auth: {user:this.user, pass:this.password, sendImmediately:false},
+          json: {cmd:cmd, mldb:this.database}
+        }, 
+        function(err,resp, body){
+          // console.log(body);
+          // if(body.datatype === 'function ValueIterator()'){
+          //   console.log(mlobj);
+          //   body.result = new ValueIterator(body.result);
+          // }
+
+          if(body.error){
+            cb(util.inspect(body.error));
+          }
+
+          cb(body);
+      });
+    }
+  },
+  fetchObj: function(){
+    request.get('http://localhost:9010/objs', 
+      {auth: {user:this.user, pass:this.password, sendImmediately:false}}, 
+      function(err,resp, body){
+        // console.log(body);
+        // vm.runInThisContext(body, 'mlobj.js');
     });
+  },
+  updateDb: function(dbname){
+    console.log("please wait for the server config to finished updating")
+    request.put('http://localhost:8002/manage/v2/servers/repl-http/properties?group-id=Default', 
+        {
+          auth: {user:this.user, pass:this.password, sendImmediately:false},
+          json: {'content-database':dbname}
+        }, 
+        function(err,resp, body){
+          if(err){
+            console.log("something went wrong!: " + err);
+          } else {
+            console.log(".. done");  
+          }
+          
+      });
+
   }
+
+  
 };
 
 // If obj.hasOwnProperty has been overridden, then calling
@@ -918,20 +941,23 @@ function defineDefaultCommands(repl) {
     help: 'Display / Modify the MarkLogic connection settings.',
     action: function(dbconfig) {
       if(dbconfig){
-        dbconfig = JSON.parse(dbconfig);
-        console.log(Object.keys(dbconfig));
-        for(var key of Object.keys(dbconfig)){
-          // console.log(key);
-          // console.log(this.context.mldbconfig[key]);
-          if(this.context.mldbconfig[key]){
-            this.context.mldbconfig[key] = dbconfig[key];
+        var tok = dbconfig.split(/\s+/)
+        
+        if(tok.length == 2){
+          if(this.context.mldbconfig[tok[0]]){
+            if(tok[0] === 'database'){
+              this.context.mldbconfig.updateDb(tok[1]);
+            } else {
+              this.context.mldbconfig[tok[0]] = tok[1];
+            }
           }
+
         }
 
-        this.context.db = marklogic.createDatabaseClient(this.context.mldbconfig);
-
+        
       } else {
-        console.log(util.inspect(this.context.db));
+        var tmp = {database:this.context.mldbconfig.database, user:this.context.mldbconfig.user, password:this.context.mldbconfig.password}
+        console.log(util.inspect(tmp));
       }
       
 

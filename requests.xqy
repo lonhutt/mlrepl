@@ -35,8 +35,8 @@ declare variable $requests:options as element(rest:options) :=
       <rest:param name="db" as="string" match="(.+)">$1</rest:param>
     </rest:request>
 
-    <rest:request uri="^/watch/?$" endpoint="watch.sjs" user-params="allow">
-      <rest:http method="POST"/>
+    <rest:request uri="^/objs?$" endpoint="ss_obj.sjs" user-params="allow">
+      <rest:http method="GET"/>
     </rest:request>	
 
   </rest:options>;
