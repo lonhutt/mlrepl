@@ -18,12 +18,9 @@ var mldbconfig = {
   password: 'admin',
   completionGroups: ['cts','fn','math','rdf','sc','sem','spell','temporal','xdmp'],
   eval: function(cmd, cb){
+    
     var scope = this;
-
-    if(cmd === 'mldb'){
-
-    } else {
-      request.post('http://localhost:9010/repl', 
+    request.post('http://localhost:9010/repl', 
         {
           auth: {user:this.user, pass:this.password, sendImmediately:false},
           json: {cmd:cmd, mldb:this.database}
@@ -36,12 +33,13 @@ var mldbconfig = {
           // }
 
           if(body.error){
+            process.domain.emit('error', body.error.message);
             cb(util.inspect(body.error));
           }
 
           cb(body);
       });
-    }
+    
   },
   fetchObj: function(){
     request.get('http://localhost:9010/objs', 
@@ -167,7 +165,6 @@ function MLREPLServer(prompt, stream, eval_, useGlobal, ignoreUndefined) {
 
             result = resp.result;
           } catch(e){
-            console.log(e);
             err = e;
             if (err && process.domain) {
               debug('not recoverable, send to domain');
@@ -333,12 +330,13 @@ function MLREPLServer(prompt, stream, eval_, useGlobal, ignoreUndefined) {
       }
 
       // If error was SyntaxError and not JSON.parse error
-      if (e) {
+      if (e) { 
         if (e instanceof Recoverable) {
           // Start buffering data like that:
           // {
           // ...  x: 1
           // ... }
+
           self.bufferedCommand += cmd + '\n';
           self.displayPrompt();
           return;
