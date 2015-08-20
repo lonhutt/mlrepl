@@ -26,15 +26,11 @@ var mldbconfig = {
           json: {cmd:cmd, mldb:this.database}
         }, 
         function(err,resp, body){
-          // console.log(body);
-          // if(body.datatype === 'function ValueIterator()'){
-          //   console.log(mlobj);
-          //   body.result = new ValueIterator(body.result);
-          // }
+          var result = body;
 
           if(body.error){
             process.domain.emit('error', body.error.message);
-            cb(util.inspect(body.error));
+            result = body.error;
           }
 
           cb(body);
@@ -58,9 +54,9 @@ var mldbconfig = {
         }, 
         function(err,resp, body){
           if(err){
-            console.log("something went wrong!: " + err);
+            process.domain.emit('error', "something went wrong!: " + err)
           } else {
-            console.log(".. done");  
+            process.domain.emit('data', "done...");
           }
           
       });
@@ -130,7 +126,7 @@ function MLREPLServer(prompt, stream, eval_, useGlobal, ignoreUndefined) {
   eval_ = eval_ || defaultEval;
 
   function defaultEval(code, context, file, cb) {
-    var err, result;
+    var err, result, objPrototype;
 
     // first, create the Script object to check the syntax
     try {
@@ -164,6 +160,7 @@ function MLREPLServer(prompt, stream, eval_, useGlobal, ignoreUndefined) {
             }
 
             result = resp.result;
+            objPrototype = resp.datatype;
           } catch(e){
             err = e;
             if (err && process.domain) {
@@ -173,7 +170,7 @@ function MLREPLServer(prompt, stream, eval_, useGlobal, ignoreUndefined) {
               return;
             }
           }
-          cb(err, result);
+          cb(err, result, objPrototype);
         });  	
     } else{
       cb(err, result);
@@ -634,25 +631,29 @@ MLREPLServer.prototype.complete = function(line, callback) {
           });
         }
       } else {
-        this.eval(expr, this.context, 'repl', function(e, obj) {
+        this.eval(expr, this.context, 'repl', function(e, obj, datatype) {
           // if (e) console.log(e);
+
+          // console.log('autocompletion');
+          // console.log(obj);
+          // console.log(datatype);
 
           if (obj != null) {
             if (util.isObject(obj) || util.isFunction(obj)) {
-              memberGroups.push(Object.getOwnPropertyNames(obj));
+              memberGroups.push((datatype) ? Object.keys(datatype) : Object.getOwnPropertyNames(obj));
             }
             // works for non-objects
             try {
               var sentinel = 5;
               var p;
               if (util.isObject(obj) || util.isFunction(obj)) {
-                p = Object.getPrototypeOf(obj);
+                p = (datatype) ? datatype : Object.getPrototypeOf(obj);
               } else {
                 p = obj.constructor ? obj.constructor.prototype : null;
               }
               while (!util.isNull(p)) {
-                memberGroups.push(Object.getOwnPropertyNames(p));
-                p = Object.getPrototypeOf(p);
+                memberGroups.push((datatype) ? Object.keys(datatype) : Object.getOwnPropertyNames(p));
+                p = (datatype) ? datatype : Object.getPrototypeOf(p);
                 // Circular refs possible? Let's guard against that.
                 sentinel--;
                 if (sentinel <= 0) {

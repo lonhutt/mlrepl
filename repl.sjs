@@ -81,10 +81,12 @@ try{
 	}
 
 	response['result'] = (result) ? result : undefined;
-	response['datatype'] = (result) ? typeof(result) : undefined;
+	response['datatype'] = (result) ? Object.getPrototypeOf(result) : undefined;
 } catch(e){
 	xdmp.log(e);
 	response['error'] = {name: e.name, message: e.stack};
 }
+
+xdmp.log(response);
 
 response;
