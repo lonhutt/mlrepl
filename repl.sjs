@@ -67,7 +67,7 @@ try{
 	if(typeof(result) == 'function'){
 		var details = params.cmd.split("\n").slice(-1)[0].split('.');
 
-		xdmp.log(details[details.length-2].trim() + " :: " + details[details.length-1].trim());
+		// xdmp.log(details[details.length-2].trim() + " :: " + details[details.length-1].trim());
 		// xdmp.log(details[details.length-2].trim().split(""));
 
 		if(details.length > 1){
@@ -87,6 +87,6 @@ try{
 	response['error'] = {name: e.name, message: e.stack};
 }
 
-xdmp.log(response);
+// xdmp.log(response);
 
 response;
