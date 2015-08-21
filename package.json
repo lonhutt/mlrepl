@@ -3,7 +3,10 @@
   "version": "0.0.1",
   "description": "a fork of the standard nodejs repl that executes against a marklogic server instead of the built-in node server.",
   "main": "mlrepl.js",
-  "repository":"https://github.com/lonhutt/mlrepl",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lonhutt/mlrepl.git"
+  },
   "dependencies": {
     "request": "2.54.0"
   },
@@ -21,5 +24,9 @@
     "node": ">=0.12.0"
   },
   "author": "Lon Hutt",
-  "license": "MIT"
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lonhutt/mlrepl/issues"
+  },
+  "homepage": "https://github.com/lonhutt/mlrepl#readme"
 }
