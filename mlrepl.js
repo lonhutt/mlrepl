@@ -647,7 +647,7 @@ MLREPLServer.prototype.complete = function(line, callback) {
               var sentinel = 5;
               var p;
               if (util.isObject(obj) || util.isFunction(obj)) {
-                p = (datatype) ? datatype : Object.getPrototypeOf(obj);
+                p = (datatype) ? Object.keys(datatype) : Object.getPrototypeOf(obj);
               } else {
                 p = obj.constructor ? obj.constructor.prototype : null;
               }

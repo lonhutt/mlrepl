@@ -35,13 +35,13 @@ var getReturnType = function(f){
   if(mtype.slice(-1) === '*' || mtype.slice(-1) === '+'){
   	jstype = getObjectProperties(ValueIterator.prototype);
   } else if(mtype.indexOf('xs:integer') > -1  || mtype.indexOf('xs:double') > -1 || mtype.indexOf('xs:decimal') > -1 || mtype.indexOf('xs:numeric') > -1 || mtype.indexOf('xs:unsignedLong') > -1){
-    jstype = getObjectProperties(Number);
+    jstype = getObjectProperties(Number.prototype);
   } else if(mtype.indexOf('xs:boolean') > -1){
-  	jstype = getObjectProperties(Boolean);
+  	jstype = getObjectProperties(Boolean.prototype);
   } else if(mtype.indexOf('xs:date') > -1){
-  	jstype = getObjectProperties(Date)
+  	jstype = getObjectProperties(Date.prototype)
   } else if(mtype.indexOf('json:array') > -1){
-  	jstype = getObjectProperties(Array);
+  	jstype = getObjectProperties(Array.prototype);
   } else if(mtype.indexOf('function(*)') > -1){
   	jstype = getObjectProperties(Value.prototype);
   } else if(mtype.indexOf('empty-sequence()') > -1) {
@@ -49,7 +49,7 @@ var getReturnType = function(f){
   } else if(mtype.indexOf('element()') > -1){
   	jstype = getObjectProperties(Element.prototype);
   } else if(mtype.indexOf('map:map') > -1){
-  	jstype = getObjectProperties(Object);
+  	jstype = getObjectProperties(Object.prototype);
   } else if(mtype.indexOf('node()') > -1){
   	jstype = getObjectProperties(Node.prototype);
   } 
@@ -81,7 +81,7 @@ try{
 	}
 
 	response['result'] = (result) ? result : undefined;
-	response['datatype'] = (result) ? Object.getPrototypeOf(result) : undefined;
+	response['datatype'] = (result && Object.keys(Object.getPrototypeOf(result)).length > 0) ? Object.getPrototypeOf(result) : undefined;
 } catch(e){
 	xdmp.log(e);
 	response['error'] = {name: e.name, message: e.stack};
