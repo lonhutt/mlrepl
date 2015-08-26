@@ -16,14 +16,18 @@ var mldbconfig = {
   database: 'Documents',
   user: 'admin',
   password: 'admin',
-  completionGroups: ['cts','fn','math','rdf','sc','sem','spell','temporal','xdmp'],
+  completionGroups: null,
+  init: function(){
+    this.fetchConfig(true);
+    this.fetchCompletionGroups();
+  },
   eval: function(cmd, cb){
     
     var scope = this;
     request.post('http://localhost:9010/repl', 
         {
           auth: {user:this.user, pass:this.password, sendImmediately:false},
-          json: {cmd:cmd, mldb:this.database}
+          json: {cmd:cmd, mldb:this.database},
         }, 
         function(err,resp, body){
           var result = body;
@@ -37,13 +41,16 @@ var mldbconfig = {
       });
     
   },
-  fetchObj: function(){
-    request.get('http://localhost:9010/objs', 
-      {auth: {user:this.user, pass:this.password, sendImmediately:false}}, 
-      function(err,resp, body){
-        // console.log(body);
-        // vm.runInThisContext(body, 'mlobj.js');
-    });
+  fetchCompletionGroups: function(){
+    request.post('http://localhost:9010/repl', 
+        {
+          auth: {user:this.user, pass:this.password, sendImmediately:false},
+          json: {cmd:"Object.keys(getObjectProperties(this)).sort();", mldb:this.database},
+          scope: this
+        }, 
+        function(err,resp, body){
+          this.scope.completionGroups = body;
+      });
   },
   updateDb: function(dbname){
     console.log("please wait for the server config to finished updating")
@@ -54,17 +61,56 @@ var mldbconfig = {
         }, 
         function(err,resp, body){
           if(err){
-            process.domain.emit('error', "something went wrong!: " + err)
+            console.log(err);
           } else {
-            process.domain.emit('data', "done...");
+            console.log(body);
           }
           
       });
+  },
+  fetchConfig: function(init){
+    request.get('http://localhost:8002/manage/v2/servers/repl-http/properties?group-id=Default', 
+        {
+          auth: {user:this.user, pass:this.password, sendImmediately:false},
+          json: true,
+          scope: this
+        }, 
+        function(err,resp, body){
+          if(err){
+            process.domain.emit('error', "something went wrong!: " + err)
+          } else {
+            this.scope.database = body['content-database'];
+            
+            if(!init){
+              request.get('http://localhost:8002/manage/LATEST/databases', 
+                  {
+                    headers: this.headers,
+                    json: true,
+                    localscope: this
+                  }, 
+                  function(err,resp, body){
+                    var dbs = body['database-default-list']['list-items']['list-item'];
+                    var dbNames = {current: null, all:[]};
+                    for(var d in dbs){
+                      if(dbs[d].nameref == this.localscope.scope.database){
+                        dbNames.current = dbs[d].nameref;
+                      }
 
-  }
+                      dbNames.all.push(dbs[d].nameref);
 
-  
+                    }
+                    console.log(dbNames);
+                    // console.log(process);
+                });
+
+              }
+            }
+            
+      });
+  }  
 };
+
+mldbconfig.init();
 
 // If obj.hasOwnProperty has been overridden, then calling
 // obj.hasOwnProperty(prop) will break.
@@ -834,13 +880,31 @@ MLREPLServer.prototype.memory = function memory(cmd) {
 function addStandardGlobals(completionGroups, filter) {
   // Global object properties
   // (http://www.ecma-international.org/publications/standards/Ecma-262.htm)
-  completionGroups.push(['NaN', 'Infinity', 'undefined',
-    'eval', 'parseInt', 'parseFloat', 'isNaN', 'isFinite', 'decodeURI',
-    'decodeURIComponent', 'encodeURI', 'encodeURIComponent',
-    'Object', 'Function', 'Array', 'String', 'Boolean', 'Number',
-    'Date', 'RegExp', 'Error', 'EvalError', 'RangeError',
-    'ReferenceError', 'SyntaxError', 'TypeError', 'URIError',
-    'Math', 'JSON','cts','fn','math','rdf','sc','sem','spell','temporal','xdmp']);
+
+
+completionGroups.push(['Array','ArrayBuffer','ArrayNode','Attr','BinaryNode','Boolean',
+'BooleanNode','CharacterData','Comment','DataView','Date','Document',
+'Element','Error','EvalError','Float32Array','Float64Array','Function',
+'Infinity','Int16Array','Int32Array','Int8Array','Intl','JSON','Math','NaN',
+'NamedNodeMap','Node','NodeBuilder','NodeList','NullNode','Number',
+'NumberNode','Object','ObjectNode','ProcessingInstruction','RangeError','ReferenceError',
+'RegExp','String','SyntaxError','Text','TypeError','TypeInfo','URIError',
+'Uint16Array','Uint32Array','Uint8Array','Uint8ClampedArray','Value',
+'ValueIterator','XMLDocument','XMLNode','cts','db','declareUpdate','decodeURI',
+'decodeURIComponent','details','dir','encodeURI','encodeURIComponent',
+'err','error','escape','eval','fn','getObjectProperties','getReturnType',
+'isFinite','isNaN','local','lock','magick','math','namespaceMap',
+'params','parseFloat','parseInt','print','prop','rdf','require',
+'response','result','returnType','sc','sem','spell','sql','temporal',
+'undefined','unescape','xdmp','xml','xmlns','xqe','xs','xsd','xsi' ]);
+
+  // completionGroups.push(['NaN', 'Infinity', 'undefined',
+  //   'eval', 'parseInt', 'parseFloat', 'isNaN', 'isFinite', 'decodeURI',
+  //   'decodeURIComponent', 'encodeURI', 'encodeURIComponent',
+  //   'Object', 'Function', 'Array', 'String', 'Boolean', 'Number',
+  //   'Date', 'RegExp', 'Error', 'EvalError', 'RangeError',
+  //   'ReferenceError', 'SyntaxError', 'TypeError', 'URIError',
+  //   'Math', 'JSON','cts','fn','math','rdf','sc','sem','spell','temporal','xdmp']);
   // Common keywords. Exclude for completion on the empty string, b/c
   // they just get in the way.
   if (filter) {
@@ -942,15 +1006,18 @@ function defineDefaultCommands(repl) {
       if(dbconfig){
         var tok = dbconfig.split(/\s+/)
         
+        if(tok[0] == 'list'){
+          this.context.mldbconfig.fetchConfig();
+        }
+
         if(tok.length == 2){
           if(this.context.mldbconfig[tok[0]]){
-            if(tok[0] === 'database'){
+            if(tok[0] == 'database'){
               this.context.mldbconfig.updateDb(tok[1]);
             } else {
               this.context.mldbconfig[tok[0]] = tok[1];
             }
           }
-
         }
 
         

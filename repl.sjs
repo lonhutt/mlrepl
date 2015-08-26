@@ -64,11 +64,10 @@ var response = {result:undefined, datatype:undefined, error:undefined};
 try{
 	var result = eval(params.cmd);
 
+	// xdmp.log(typeof(result));
+
 	if(typeof(result) == 'function'){
 		var details = params.cmd.split("\n").slice(-1)[0].split('.');
-
-		// xdmp.log(details[details.length-2].trim() + " :: " + details[details.length-1].trim());
-		// xdmp.log(details[details.length-2].trim().split(""));
 
 		if(details.length > 1){
 			if(namespaceMap[details[details.length-2].trim()]){
@@ -76,12 +75,21 @@ try{
 				var returnType = xdmp.functionReturnType(xdmp.function(fn.QName(namespaceMap[details[details.length-2].trim()], details[details.length-1].trim())));
 				result = getReturnType(returnType).jstype;
 			}
+		} else {
+			var props = getObjectProperties(result);
+			result = (Object.keys(props.prototype).length > 0) ? props.prototype : props;
 		}
 		
-	}
+	} 
+	// else if(typeof(result) == 'object' && Object.keys(result) == 0){
+	// 	result = getObjectProperties(result);
+	// }
+
+
+	// xdmp.log(Object.keys(result));
 
 	response['result'] = (result) ? result : undefined;
-	response['datatype'] = (result && Object.keys(Object.getPrototypeOf(result)).length > 0) ? Object.getPrototypeOf(result) : undefined;
+	response['datatype'] = (result && (typeof(result) == 'object' || typeof(result) == 'function') && Object.keys(Object.getPrototypeOf(result)).length > 0) ? Object.getPrototypeOf(result) : undefined;
 } catch(e){
 	xdmp.log(e);
 	response['error'] = {name: e.name, message: e.stack};
