@@ -57,12 +57,14 @@ var mldbconfig = {
     request.put('http://localhost:8002/manage/v2/servers/repl-http/properties?group-id=Default', 
         {
           auth: {user:this.user, pass:this.password, sendImmediately:false},
-          json: {'content-database':dbname}
+          json: {'content-database':dbname},
+          scope: this
         }, 
         function(err,resp, body){
           if(err){
             console.log(err);
           } else {
+            this.scope.database = dbname;
             console.log(body);
           }
           

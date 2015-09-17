@@ -8,6 +8,7 @@
     "url": "git+https://github.com/lonhutt/mlrepl.git"
   },
   "dependencies": {
+    "body-parser": "^1.13.3",
     "request": "2.54.0"
   },
   "devDependencies": {},

@@ -1,0 +1,26 @@
+{
+  "name": "mledit",
+  "version": "0.0.1",
+  "homepage": "https://github.com/lonhutt/mlrepl",
+  "authors": [
+    "Lon Hutt <lonhutt@gmail.com>"
+  ],
+  "description": "browser based, repl enabled, marklogic coded editor",
+  "keywords": [
+    "editor",
+    "marklogic",
+    "repl"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-ui-ace": "bower",
+    "angular": "~1.4.4"
+  }
+}

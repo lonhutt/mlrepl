@@ -14,6 +14,17 @@ fs.readFile("./repl.sjs", function(err, data){
   });
 });
 
+fs.readFile("./util.sjs", function(err, data){
+  request.put('http://localhost:8000/LATEST/documents?database=Modules&uri=/util.sjs', 
+    {
+      auth: mlauth,
+      body: data
+    }, 
+    function(err,resp, body){
+      console.log(body);    
+  });
+});
+
 fs.readFile("./url_rewritter.sjs", function(err, data){
   request.put('http://localhost:8000/LATEST/documents?database=Modules&uri=/url_rewritter.sjs', 
     {

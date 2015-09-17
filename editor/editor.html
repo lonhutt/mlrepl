@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html ng-app="mlrepl">
+	<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+   	<script type="text/javascript" src="angular/angular.min.js"></script>
+    <script type="text/javascript" src="angular-bootstrap/ui-bootstrap.js"></script>
+    <script type="text/javascript" src="angular-bootstrap/ui-bootstrap-tpls.js"></script>
+
+    <script type="text/javascript" src="ace-builds/src-min-noconflict/ace.js"></script>
+		<script type="text/javascript" src="angular-ui-ace/ui-ace.js"></script>
+		<script type="text/javascript" src="ace-builds/src-min-noconflict/ext-language_tools.js"></script>
+
+    <script type="text/javascript" src="/javascript/app.js"></script>
+    <script type="text/javascript" src="/javascript/modules/controllers.js"></script>
+    <script type="text/javascript" src="/javascript/modules/directives.js"></script>
+    <script type="text/javascript" src="/javascript/modules/services.js"></script>
+
+    <link rel="stylesheet" href="bootstrap/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="bootstrap/dist/css/bootstrap-theme.min.css"/>
+
+    <link rel="stylesheet" href="css/style.css" />
+
+	</head>
+
+	<body ng-controller="EditorCtrl as editor">
+		<div class="container-fluid">
+		  <div class="row">
+
+			  <div class="panel panel-default col-md-8">
+				  <div class="panel-body">
+				    <div ui-ace="{
+					    	mode: 'javascript', 
+					    	theme:'twilight', 
+					    	onChange: onEditorChange,
+					    	onLoad: editorLoad,
+							  advanced: {
+							      enableBasicAutocompletion: true,
+							      enableLiveAutocompletion: true,
+							      enableSnippets: true
+							  }
+				    	}"></div>
+				  </div>
+				</div>
+
+
+		  	<div class="panel panel-default col-md-4">
+				  <div class="panel-body">
+				    <div ui-ace="{mode: 'json', onLoad: evalLoad}" readonly></div>
+				  </div>
+				</div>
+
+	  	</div>  
+		</div>
+	</body>
+</html>
