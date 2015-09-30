@@ -10,3 +10,11 @@ node install.js
 ```javascript
 node playground.js
 ```
+
+## Play with the editor
+```javascript
+cd editor
+bower install
+node server.js
+```
+The browser should open automatically when you start the server.
