@@ -93,6 +93,12 @@ var getReturnType = function(f){
 
 var getDocs = function(fname, lib){
 
+  try{
+    xdmp.database("MLDocs");
+  }catch(e){
+    return   
+  }
+  
   for(var i in fname){
     if(fname[i] == fname[i].toUpperCase()){
       fname = fname.replace(fname[i] ,'-'+fname[i].toLowerCase()) 
