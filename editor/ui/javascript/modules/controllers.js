@@ -14,7 +14,18 @@
     				$scope.evalPanel.setValue(resp.error.message.split('\n')[0]);
     				return;
     			}
-	    		$scope.evalPanel.setValue((resp.result) ? JSON.stringify(resp.result, null, 2) : "");
+                if(resp.result == 0){
+                    $scope.evalPanel.setValue("0");
+                } else {
+                    $scope.evalPanel.setValue((resp.result) ? JSON.stringify(resp.result, null, 2) : "");
+                }
+
+
+                if(resp.doc){
+                    $scope.summary = resp.doc.summary;
+                    $scope.examples = resp.doc.examples;
+                }
+
 	    	})
 	    	.error(function(resp){
 	    		$scope.evalPanel.setValue(resp.error);

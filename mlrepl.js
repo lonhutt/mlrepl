@@ -36,7 +36,6 @@ var mldbconfig = {
             process.domain.emit('error', body.error.message);
             result = body.error;
           }
-
           cb(body);
       });
     

@@ -138,5 +138,5 @@ app.get('/complete', function(req, res){
 var server = app.listen(1337, function () {
   var port = server.address().port;
   console.log('Server started on port 1337.. Opening Browser');
-	// open('http://localhost:1337');
+	open('http://localhost:1337');
 });

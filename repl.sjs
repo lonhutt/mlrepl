@@ -20,25 +20,41 @@ var namespaceMap = {
 
 var getObjectProperties = function(obj){
 
+  var props = {};
+
   if(util.isArray(obj)){
-    obj = Array.prototype;
+    props = Object.getOwnPropertyNames(Array.prototype);
   } else if(util.isBoolean(obj)){
-    obj = Boolean.prototype;
+    props = Object.getOwnPropertyNames(Boolean.prototype);
   } else if(util.isDate(obj)){
-    obj = Date.prototype;
+    props = Object.getOwnPropertyNames(Date.prototype);
   } else if(util.isNumber(obj)){
-    obj = Number.prototype;
+    props = Object.getOwnPropertyNames(Number.prototype);
   } else if(util.isString(obj)){
-    obj = String.prototype;
+    props = Object.getOwnPropertyNames(String.prototype);
   } else if(util.isRegExp(obj)){
-    obj = RegExp.prototype;
+    props = Object.getOwnPropertyNames(RegExp.prototype);
+  } else if(Object.getOwnPropertyNames(obj).length === 0){
+
+
+    props = Object.getOwnPropertyNames(obj.constructor.prototype);
+
+    // xdmp.log(Object.keys(obj.constructor.prototype));
+    props = props.concat(Object.keys(obj.constructor.prototype));
+    // for(var p in Object.keys(obj.constructor.prototype)){
+    //   props.push(p);
+    // }
+
+
+  } else {
+    props = Object.getOwnPropertyNames(obj)
   }
 
-  var props = Object.getOwnPropertyNames(obj);
   var result = {}
   for(var i in props){
-    result[props[i]] = obj[props[i]];
+    result[props[i]] = (obj[props[i]]) ? obj[props[i]] : null;
   }
+
   return result;
 };
 
@@ -75,18 +91,41 @@ var getReturnType = function(f){
   return {mlType: mtype, jstype: jstype};
 };
 
-var response = {result:undefined, datatype:undefined, error:undefined};
+var getDocs = function(fname, lib){
+
+  for(var i in fname){
+    if(fname[i] == fname[i].toUpperCase()){
+      fname = fname.replace(fname[i] ,'-'+fname[i].toLowerCase()) 
+    }
+  }
+  
+ var xqy = "declare namespace docs='http://marklogic.com/xdmp/apidoc';declare namespace html='http://www.w3.org/1999/xhtml';fn:doc()//docs:function[@name='"+fname+"' and @lib='"+lib+"']";
+
+  var docXqySummary = xdmp.xqueryEval(xqy+"/docs:summary//text()",  null,
+  {"database" : xdmp.database("MLDocs")});
+
+  var docXqyExamples = xdmp.xqueryEval(xqy+"/docs:example[@class='javascript']/html:pre/text()",  null,
+  {"database" : xdmp.database("MLDocs")});
+
+  // xdmp.log(docXqySummary);
+
+  return {summary: docXqySummary.toString(), examples:docXqyExamples.toArray()};
+
+}
+
+var response = {result:undefined, datatype:undefined, error:undefined, doc: undefined};
 try{
 	var result = eval(params.cmd);
 
-	if(typeof(result) == 'function'){
+	if(util.isFunction(result)){
 		var details = params.cmd.split("\n").slice(-1)[0].split('.');
-
-		if(details.length > 1){
+    if(details.length > 1){
 			if(namespaceMap[details[details.length-2].trim()]){
 
-				var returnType = xdmp.functionReturnType(xdmp.function(fn.QName(namespaceMap[details[details.length-2].trim()], details[details.length-1].trim())));
+				// xdmp.log(getDocs(details[details.length-1].trim(),details[details.length-2].trim()));
+        var returnType = xdmp.functionReturnType(xdmp.function(fn.QName(namespaceMap[details[details.length-2].trim()], details[details.length-1].trim())));
 				result = getReturnType(returnType).jstype;
+        response.doc = getDocs(details[details.length-1].trim(), details[details.length-2].trim());
 			}
 		} else {
 			var props = getObjectProperties(result);
