@@ -1,20 +1,18 @@
 # mlrepl
-A fork of the NodeJS repl that runs evals against a MarkLogic server instead of the built-in node server.
+A fork of the NodeJS repl that runs evals against a MarkLogic server instead of the built-in node server. 
 
 ## Setup:
 ```javascript
-node install.js
+npm install -g
 ```
 
 ## Run
 ```javascript
-node playground.js
+mlrepl
 ```
 
 ## Play with the editor
 ```javascript
-cd editor
-bower install
-node server.js
+mlrepl
+.mldb editor
 ```
-The browser should open automatically when you start the server.

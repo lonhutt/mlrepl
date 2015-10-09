@@ -2,29 +2,60 @@
 <html ng-app="mlrepl">
 	<head>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-   	<script type="text/javascript" src="angular/angular.min.js"></script>
-    <script type="text/javascript" src="angular-bootstrap/ui-bootstrap.js"></script>
-    <script type="text/javascript" src="angular-bootstrap/ui-bootstrap-tpls.js"></script>
+   	
+   	<script type="text/javascript" src="/editor/bower_components/angular/angular.min.js"></script>
+    <script type="text/javascript" src="/editor/bower_components/angular-bootstrap/ui-bootstrap.js"></script>
+    <script type="text/javascript" src="/editor/bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
 
-    <script type="text/javascript" src="ace-builds/src-min-noconflict/ace.js"></script>
-		<script type="text/javascript" src="angular-ui-ace/ui-ace.js"></script>
-		<script type="text/javascript" src="ace-builds/src-min-noconflict/ext-language_tools.js"></script>
+    <script type="text/javascript" src="/editor/bower_components/ace-builds/src-min-noconflict/ace.js"></script>
+		<script type="text/javascript" src="/editor/bower_components/angular-ui-ace/ui-ace.min.js"></script>
+		<script type="text/javascript" src="/editor/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js"></script>
 
-    <script type="text/javascript" src="/javascript/app.js"></script>
-    <script type="text/javascript" src="/javascript/modules/controllers.js"></script>
-    <script type="text/javascript" src="/javascript/modules/directives.js"></script>
-    <script type="text/javascript" src="/javascript/modules/services.js"></script>
+    <script type="text/javascript" src="/editor/ui/javascript/app.js"></script>
+    <script type="text/javascript" src="/editor/ui/javascript/modules/controllers.js"></script>
+    <script type="text/javascript" src="/editor/ui/javascript/modules/directives.js"></script>
+    <script type="text/javascript" src="/editor/ui/javascript/modules/services.js"></script>
 
-    <link rel="stylesheet" href="bootstrap/dist/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="bootstrap/dist/css/bootstrap-theme.min.css"/>
+    <link rel="stylesheet" href="/editor/bower_components/bootstrap/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/editor/bower_components/bootstrap/dist/css/bootstrap-theme.min.css"/>
 
-    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="/editor/ui/css/style.css" />
 
 	</head>
 
 	<body ng-controller="EditorCtrl as editor">
 		<div class="container-fluid">
 		  <div class="row">
+
+		  	<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+				  <div class="container">
+				    <div class="navbar-header">
+				      <button type="button" class="navbar-toggle" ng-click="isCollapsed = !isCollapsed">
+				        <span class="sr-only">Toggle navigation</span>
+				        <span class="icon-bar"></span>
+				        <span class="icon-bar"></span>
+				        <span class="icon-bar"></span>
+				      </button>
+				      <a class="navbar-brand" href="/inventory">MLREPL</a>
+				    </div>
+				    <div collapse="isCollapsed" class="navbar-collapse bs-js-navbar-collapse">
+				      <ul class="nav navbar-nav navbar-right">
+				        
+				        <li dropdown>
+				          
+				            <a href="#" dropdown-toggle>{{config.server.contentDb.name}}<span class="caret"></span></a>
+				            <ul class="dropdown-menu" role="menu">
+				              <li ng-repeat="db in config.databases"><a ng-click="updateDb(db)" href="#">{{db.name}}</a></li>
+				            </ul>
+				          
+				        </li>
+
+				        <li><a href="#">Help</a></li>
+				      </ul>
+				  
+				    </div>
+				  </div>
+				</nav>
 
 			  <div class="panel panel-default col-md-8">
 				  <div class="panel-body">
@@ -51,11 +82,11 @@
 
 	  	</div> 
 
-	  	<div class="row" ng-hide="!summary">
-	  		<div class="panel panel-default col-md-12">
-	  			<div class="panel-heading">{{summary}}</div>
+	  	<div class="row" ng-hide="!doc">
+	  		<div class="panel panel-info col-md-12">
+	  			<h3 class="panel-heading">{{doc.name}}<small>: {{doc.summary}}</small></h3>
 	  			<div class="panel-body">
-	  				<pre ng-repeat="e in examples">{{e}}</pre>
+	  				<pre ng-repeat="e in doc.examples">{{e}}</pre>
 	  			</div>
 	  		</div>
 	  	</div>

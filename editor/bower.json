@@ -20,7 +20,8 @@
     "tests"
   ],
   "dependencies": {
+    "angular-bootstrap": "~0.13.4",
     "angular-ui-ace": "bower",
-    "angular": "~1.4.4"
+    "bootstrap": "~3.3.5"
   }
 }

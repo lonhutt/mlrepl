@@ -4,7 +4,7 @@ var util = require('util.sjs');
 
 var params = JSON.parse(xdmp.getRequestBody().toString());
 
-var db = (params.mldb) ? params.mldb : "Documents";
+// var db = (params.mldb) ? params.mldb : "Documents";
 
 var namespaceMap = {
 	'cts': 'http://marklogic.com/cts',
@@ -93,29 +93,17 @@ var getReturnType = function(f){
 
 var getDocs = function(fname, lib){
 
-  try{
-    xdmp.database("MLDocs");
-  }catch(e){
-    return   
-  }
-  
-  for(var i in fname){
-    if(fname[i] == fname[i].toUpperCase()){
-      fname = fname.replace(fname[i] ,'-'+fname[i].toLowerCase()) 
-    }
-  }
-  
- var xqy = "declare namespace docs='http://marklogic.com/xdmp/apidoc';declare namespace html='http://www.w3.org/1999/xhtml';fn:doc()//docs:function[@name='"+fname+"' and @lib='"+lib+"']";
+  var doc = {name: [lib,fname].join('.'), summary: undefined, examples: undefined};
 
-  var docXqySummary = xdmp.xqueryEval(xqy+"/docs:summary//text()",  null,
-  {"database" : xdmp.database("MLDocs")});
+  var xqy = "declare namespace api='http://marklogic.com/rundmc/api';declare namespace html='http://www.w3.org/1999/xhtml';fn:collection('"+lib+"')//api:function[@name='"+fname+"']";
 
-  var docXqyExamples = xdmp.xqueryEval(xqy+"/docs:example[@class='javascript']/html:pre/text()",  null,
-  {"database" : xdmp.database("MLDocs")});
+  var docXqySummary = xdmp.xqueryEval(xqy+"/api:summary//text()", null, {database: xdmp.database("Modules")});
+  var docXqyExamples = xdmp.xqueryEval(xqy+"/api:example[@class='javascript']/html:pre/text()", null, {database: xdmp.database("Modules")});
 
-  // xdmp.log(docXqySummary);
+  doc.summary = docXqySummary.toString();
+  doc.examples = docXqyExamples.toArray();
 
-  return {summary: docXqySummary.toString(), examples:docXqyExamples.toArray()};
+  return doc;
 
 }
 

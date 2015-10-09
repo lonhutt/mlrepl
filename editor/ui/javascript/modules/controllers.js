@@ -2,28 +2,33 @@
 
   var app = angular.module('mlrepl.controllers', []);
 
+  app.controller('HelpModalCtrl', function($scope, $modalInstance){
+    $scope.close = function(){
+        $modalInstance.dismiss();
+    };
+  });
+
   app.controller('EditorCtrl', ['$http', '$scope', '$location', function($http, $scope, $location){
     
   	var langTools = ace.require("ace/ext/language_tools");
 		
     $scope.onEditorChange = function(editor){
 
-    	$http.post('/mlrepl', editor[1].getValue())
+    	$http.post('/repl', {cmd:editor[1].getValue()})
     		.success(function(resp){
     			if(resp.error){
     				$scope.evalPanel.setValue(resp.error.message.split('\n')[0]);
     				return;
     			}
-                if(resp.result == 0){
-                    $scope.evalPanel.setValue("0");
+                if(typeof(resp.result) === 'number'){
+                    $scope.evalPanel.setValue(resp.result.toString());
                 } else {
                     $scope.evalPanel.setValue((resp.result) ? JSON.stringify(resp.result, null, 2) : "");
                 }
 
 
                 if(resp.doc){
-                    $scope.summary = resp.doc.summary;
-                    $scope.examples = resp.doc.examples;
+                    $scope.doc = resp.doc;  
                 }
 
 	    	})
@@ -64,7 +69,7 @@
         					context += '\n'+line.replace(prefix, "");
         				}
 
-        				$http.post('/mlrepl', context.replace(/.\s*$/, ""))
+        				$http.post('/repl', {cmd:context.replace(/.\s*$/, "")})
 					    		.success(function(resp){
 					    			if(resp.datatype || resp.result){
 					    				callback(null, Object.keys((resp.datatype) ? resp.datatype : resp.result).map(function(k,v){
@@ -77,7 +82,7 @@
 						    		console.log(resp);
 						    	});	
         			} else {
-        				$http.get("/complete")
+        				$http.post("/repl", {cmd:"Object.keys(getObjectProperties(this)).sort();"})
 		            	.then(
 		                function(resp) {
 		                    if(resp.data.result){
@@ -92,6 +97,21 @@
         }
     }
     langTools.addCompleter(mlreplCompleter);
+
+    $http.get('/config')
+        .then(function(resp){
+            $scope.config = resp.data;
+        }, function(err){console.log(err)});
+
+    $scope.updateDb = function(db){
+        $scope.config.server.contentDb = db;
+        $http.post('/config', {dbId: db.name})
+            .then(function(resp){
+                console.log(resp);
+            }, function(err){console.err(err)});
+    };
+
+
 
   }]);
 

@@ -1,4 +1,5 @@
-// var marklogic = require('marklogic');
+#!/usr/bin/env node
+
 var request = require('request');
 var repl = require('repl');
 var util = require('util');
@@ -10,21 +11,45 @@ var fs = require('fs');
 var rl = require('readline');
 var Console = require('console').Console;
 var domain = require('domain');
+var osenv = require('osenv');
+var path = require('path');
+var open = require('open');
 var debug = util.debuglog('mlrepl');
+
+var getConfig = function(){
+  try{
+    var configFile = path.resolve([osenv.home(), '.mlreplrc'].join('/'));
+    if(fs.statSync(configFile).isFile()){
+      return JSON.parse(fs.readFileSync(configFile))
+    } else {
+      return false;
+    }
+
+  } catch(e){
+    return false;
+  }
+}
 
 var mldbconfig = {
   database: 'Documents',
   user: 'admin',
   password: 'admin',
-  completionGroups: null,
+  host: 'localhost',
+  port: 9010,
+  completionGroups: null, // this doesn't work correctly yet...
   init: function(){
     this.fetchConfig(true);
     this.fetchCompletionGroups();
+    var config = getConfig();
+    this.user = (config.username) ? config.username : this.user;
+    this.password = (config.password) ? config.password : this.password;
+    this.database = (config.database) ? config.database : this.database;
+    this.port = (config.port) ? config.port : this.port;
   },
   eval: function(cmd, cb){
     
     var scope = this;
-    request.post('http://localhost:9010/repl', 
+    request.post('http://'+[this.host, this.port].join(':')+'/repl', 
         {
           auth: {user:this.user, pass:this.password, sendImmediately:false},
           json: {cmd:cmd, mldb:this.database},
@@ -41,7 +66,7 @@ var mldbconfig = {
     
   },
   fetchCompletionGroups: function(){
-    request.post('http://localhost:9010/repl', 
+    request.post('http://'+[this.host, this.port].join(':')+'/repl', 
         {
           auth: {user:this.user, pass:this.password, sendImmediately:false},
           json: {cmd:"Object.keys(getObjectProperties(this)).sort();", mldb:this.database},
@@ -53,7 +78,7 @@ var mldbconfig = {
   },
   updateDb: function(dbname){
     console.log("please wait for the server config to finished updating")
-    request.put('http://localhost:8002/manage/v2/servers/repl-http/properties?group-id=Default', 
+    request.put('http://'+this.host+':8002/manage/v2/servers/repl-http/properties?group-id=Default', 
         {
           auth: {user:this.user, pass:this.password, sendImmediately:false},
           json: {'content-database':dbname},
@@ -70,7 +95,7 @@ var mldbconfig = {
       });
   },
   fetchConfig: function(init){
-    request.get('http://localhost:8002/manage/v2/servers/repl-http/properties?group-id=Default', 
+    request.get('http://'+this.host+':8002/manage/v2/servers/repl-http/properties?group-id=Default', 
         {
           auth: {user:this.user, pass:this.password, sendImmediately:false},
           json: true,
@@ -83,7 +108,7 @@ var mldbconfig = {
             this.scope.database = body['content-database'];
             
             if(!init){
-              request.get('http://localhost:8002/manage/LATEST/databases', 
+              request.get('http://'+this.host+':8002/manage/LATEST/databases', 
                   {
                     headers: this.headers,
                     json: true,
@@ -1011,6 +1036,10 @@ function defineDefaultCommands(repl) {
           this.context.mldbconfig.fetchConfig();
         }
 
+        if(tok[0] == 'editor'){
+          open('http://'+[this.context.mldbconfig.host, this.context.mldbconfig.port].join(':')+'/editor');
+        }
+
         if(tok.length == 2){
           if(this.context.mldbconfig[tok[0]]){
             if(tok[0] == 'database'){
@@ -1091,3 +1120,10 @@ function Recoverable(err) {
   this.err = err;
 }
 inherits(Recoverable, SyntaxError);
+
+
+if(getConfig()){
+  exports.start('mlrepl>');  
+} else {
+  console.log('~/.mlreplrc file not found or is corrupt, please npm install from the source directory to fix the issue.');
+}
