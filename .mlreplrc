@@ -1,0 +1,7 @@
+{
+  "username": "admin",
+  "password": "admin",
+  "host": "localhost",
+  "port": 9010,
+  "database": "Documents"
+}
