@@ -51,7 +51,20 @@ var uploadFiles = function(basedir, recursive){
           upload(path);
       }        
     }
+  }
+}
 
+var batchWrite = function(buffer, batchSize){
+  var bufferSize = buffer.length;
+  var batches = Math.floor(bufferSize/batchSize);
+  
+  var batch = 0;
+  while(batch <= batches){
+    var batchStart = batch*batchSize;
+    var batchEnd = (batch == batches) ? bufferSize : batchStart + (batchSize-1);
+    // console.log(batchStart + ' :: ' + batchEnd);
+    db.documents.write(buffer.slice(batchStart, batchEnd+1)).result(function(resp){console.log('uploading static content to web editor..')});
+    batch++;
   }
 
 }
@@ -73,7 +86,9 @@ uploadFiles('editor/bower_components/bootstrap/dist', true);
 
 uploadFiles('editor/docs', true);
 
-db.documents.write(buffer).result(function(resp){console.log('uploaded all static content to web editor..')});
+// db.documents.write(buffer).result(function(resp){console.log('uploaded all static content to web editor..')});
+
+batchWrite(buffer, 100);
 
 request.get('http://localhost:8002/manage/LATEST/servers/repl-http?group-id=Default', 
   {

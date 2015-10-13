@@ -9,16 +9,19 @@
     "url": "git+https://github.com/lonhutt/mlrepl.git"
   },
   "dependencies": {
-    "bower": "^1.5.3",
     "marklogic": "^1.0.3",
     "open": "0.0.5",
     "osenv": "^0.1.3",
     "request": "2.54.0"
   },
+  "devDependencies": {
+    "bower": "^1.5.3"
+  },
   "scripts": {
-    "preinstall": "cd editor; tar xf docs.tar.gz; bower install",
-    "install": "node scripts/checkConfig.js; node scripts/install.js",
-    "postinstall": "cd editor; rm -fr docs",
+    "mlconfig": "node scripts/checkConfig.js",
+    "preinstall": "cd editor; tar xf docs.tar.gz; tar xf bower.tar.gz",
+    "install": "node scripts/install.js",
+    "postinstall": "cd editor; rm -fr docs; rm -fr bower_components",
     "test": "mlrepl"
   },
   "bin": {
@@ -36,6 +39,7 @@
   "engines": {
     "node": ">=0.12.0"
   },
+  "engineStrict" : true,
   "author": "Lon Hutt <lonhutt@gmail.com>",
   "license": "MIT",
   "bugs": {
