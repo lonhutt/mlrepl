@@ -19,13 +19,14 @@
   },
   "scripts": {
     "mlconfig": "node scripts/checkConfig.js",
-    "preinstall": "cd editor; tar xf docs.tar.gz; tar xf bower.tar.gz",
+    "preinstall": "cp .mlreplrc ~/; cd editor; tar xf docs.tar.gz; tar xf bower.tar.gz",
     "install": "node scripts/install.js",
     "postinstall": "cd editor; rm -fr docs; rm -fr bower_components",
     "test": "mlrepl"
   },
   "bin": {
-    "mlrepl": "./bin/mlrepl"
+    "mlrepl": "./bin/mlrepl",
+    "mlrconfig": "./bin/mlrconfig"
   },
   "keywords": [
     "repl",

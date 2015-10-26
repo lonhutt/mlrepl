@@ -2,18 +2,37 @@
 
 var request = require('request');
 var fs = require('fs');
+var osenv = require('osenv');
+var path = require('path');
 var marklogic = require('marklogic');
 
+var getConfig = function(){
+  var configFile = path.resolve([osenv.home(), '.mlreplrc'].join('/'));
+  try{
+    
+    if(fs.statSync(configFile).isFile()){
+      return JSON.parse(fs.readFileSync(configFile));
+    } else {
+      return false;
+    }
+
+  } catch(e){
+    return false;
+  }
+}
+
+var mlconfig = getConfig()
+
 var db = marklogic.createDatabaseClient({
-  host: 'localhost',
+  host: mlconfig.host,
   port: '8000',
-  user: 'admin',
-  password: 'admin',
+  user: mlconfig.username,
+  password: mlconfig.password,
   database: 'Modules',
   authType: 'DIGEST'
 });
 
-var mlauth = {user:'admin', pass:'admin', sendImmediately:false};
+var mlauth = {user:mlconfig.username, pass:mlconfig.password, sendImmediately:false};
 
 var buffer = [];
 var upload = function(path){
@@ -105,8 +124,8 @@ request.get('http://localhost:8002/manage/LATEST/servers/repl-http?group-id=Defa
           json: {
             "server-name":"repl-http", 
             "root":"/", 
-            "port":9010, 
-            "content-database":"Documents", 
+            "port":mlconfig.port, 
+            "content-database":mlconfig.database, 
             "modules-database":"Modules",
             "url-rewriter":"url_rewritter.sjs"
           }

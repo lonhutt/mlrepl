@@ -8,7 +8,7 @@ If you are running RHEL 6.x I strongly encourage you to follow the instructions 
 
 ## Setup:
 ```javascript
-cp .mlreplrc ~/ #contains config information for your local marklogic instance; please feel free to modify this as needed.
+modify the .mlreplrc file in the base directory to match your system (probably just username and password)
 (sudo?) npm install -g
 ```
 

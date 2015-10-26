@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 var fs = require('fs');
 var osenv = require('osenv');
 var path = require('path');
@@ -70,6 +72,4 @@ var buildConfig = function(){
 
 if(!getConfig()){
   buildConfig();  
-} else {
-  console.log("You already have a vaild .mlreplrc file in your home directory");
 }
