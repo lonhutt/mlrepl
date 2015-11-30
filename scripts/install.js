@@ -109,16 +109,17 @@ uploadFiles('editor/docs', true);
 
 batchWrite(buffer, 100);
 
-request.get('http://localhost:8002/manage/LATEST/servers/repl-http?group-id=Default', 
+request.get('http://'+mlconfig.host+':8002/manage/LATEST/servers/repl-http?group-id=Default', 
   {
     auth: mlauth,
     headers: {'Accept': 'application/json'},
     json: true
   }, 
   function(err,resp, body){
+    // console.log(body)
     if(body['errorResponse']){
       console.log('configuring MLREPL server..');
-      request.post('http://localhost:8002/manage/LATEST/servers?group-id=Default&server-type=http', 
+      request.post('http://'+mlconfig.host+':8002/manage/LATEST/servers?group-id=Default&server-type=http', 
         {
           auth: mlauth,
           json: {

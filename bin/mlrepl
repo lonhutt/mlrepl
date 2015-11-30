@@ -38,13 +38,16 @@ var mldbconfig = {
   port: 9010,
   completionGroups: null, // this doesn't work correctly yet...
   init: function(){
-    this.fetchConfig(true);
-    this.fetchCompletionGroups();
+    
     var config = getConfig();
     this.user = (config.username) ? config.username : this.user;
     this.password = (config.password) ? config.password : this.password;
     this.database = (config.database) ? config.database : this.database;
     this.port = (config.port) ? config.port : this.port;
+    this.host = (config.host) ? config.host : this.host;
+
+    this.fetchConfig(true);
+    this.fetchCompletionGroups();
   },
   eval: function(cmd, cb){
     
@@ -103,7 +106,7 @@ var mldbconfig = {
         }, 
         function(err,resp, body){
           if(err){
-            process.domain.emit('error', "something went wrong!: " + err)
+            console.error('error', "something went wrong!: " + err)
           } else {
             this.scope.database = body['content-database'];
             
